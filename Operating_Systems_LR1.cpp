@@ -8,10 +8,10 @@
 #include <process.h> 
  
 void interactive_mode(void); 
-void error_message(char* message); 
-void input_string(char* message, char* destination); 
-void pack(char* filename); 
-void unpack(char* zipname, char* dir); 
+void error_message(const char* message); 
+void input_string(const char* message, char* destination); 
+void pack(char* filename);
+void unpack(const char* zipname, char* dir); 
 void crypt(char* filename); 
 void uncrypt(char* filename); 
  
@@ -28,7 +28,7 @@ void main(int argc, char* argv[]) {
  else 
   if (!strcmp(argv[1], "-p")) { //если указан первый флаг "-p", то запоковать 
    if (argc < 3) // название файла неуказано 
-    input_string((char*) "Enter file name: ", filename); 
+    input_string("Enter file name: ", filename); 
    else 
     strcpy(filename, argv[2]); 
    pack(filename); 
@@ -36,18 +36,18 @@ void main(int argc, char* argv[]) {
   else 
    if (!strcmp(argv[1], "-u")) { //если указан первый флаг "-u", то запоковать 
     if (argc < 3) // название архива не указано 
-     input_string((char*) "Enter archive name: ", zipname); 
+     input_string("Enter archive name: ", zipname); 
     else 
      strcpy(zipname, argv[2]); 
  
     if (argc < 4) // название директории не указано 
-     input_string((char*) "Enter directory name: ", dir); 
+     input_string("Enter directory name: ", dir); 
     else 
      strcpy(dir, argv[3]); 
     unpack(zipname, dir); 
    } 
    else 
-    error_message((char*) "Unknown parameter"); 
+    error_message("Unknown parameter"); 
 } 
  
 // Пользователь не указал никаких параметров 
@@ -58,10 +58,10 @@ void interactive_mode() {
  char zipname[100]; 
  char dir[100]; 
  
- input_string((char*) "\nEnter file name: ", filename); 
+ input_string("\nEnter file name: ", filename); 
  
  if (mode == 'n') { 
-  input_string((char*) "Enter the derectory to unpack: ", dir); 
+  input_string("Enter the directory to unpack: ", dir); 
   unpack(filename, dir); 
  } 
  else 
@@ -69,15 +69,15 @@ void interactive_mode() {
 } 
  
 // Вставить название 
-void input_string(char* message, char* destination) { 
+void input_string(const char* message, char* destination) { 
  printf("%s", message); 
- scanf("%s", &destination); 
+ scanf("%s", destination); 
  if (!strlen(destination)) 
-  error_message((char*) "zero string"); 
+  error_message("zero string"); 
 } 
  
 // Сообщеие об ошибке 
-void error_message(char* message) { 
+void error_message(const char* message) { 
  printf("%s\n", message); 
  // Выйти из программы 
  _getch(); 
@@ -89,8 +89,8 @@ void pack(char* filename) {
  char strong_filename[1000], 
   strong_zipname[1000], 
   cur_dir[1000], 
-  param1[1000], 
-  param2[1000]; 
+  archive_name[1000], 
+  file[1000]; 
  _getcwd(cur_dir, 1000); 
  
  // Если введено неабсолютное имя файла, то преобразуется 
@@ -111,22 +111,24 @@ void pack(char* filename) {
   strcat(strong_zipname, ".zip"); 
  
  // Параметры командой строки 
- sprintf(param2, "\"%s\"", strong_filename); 
- sprintf(param1, "\"%s\"", strong_zipname); 
+ sprintf(file, "\"%s\"", strong_filename); 
+ sprintf(archive_name, "\"%s\"", strong_zipname); 
  
  // Зашифровать 
- crypt(strong_filename); 
+ crypt(strong_filename);
+ 
  // Запаковать 
- _spawnl(_P_WAIT, "C:\\Program Files\\7Zip\\7z.exe","7z.exe","a", param1, param2, NULL); 
-  // Вернуть файл в исходное состояние 
-  uncrypt(strong_filename); 
+ _spawnl(_P_WAIT, "C:\\Program Files\\7Zip\\7z.exe","7z.exe","a", archive_name, file, NULL);
+ 
+ // Вернуть файл в исходное состояние 
+ uncrypt(strong_filename); 
  
  printf("Done"); 
  _getch(); 
 } 
  
 // Распаковать 
-void unpack(char* zipname, char* dir) { 
+void unpack(const char* zipname, char* dir) { 
  char strong_zipname[1000], 
   filename[1000], 
   cur_dir[1000], 
@@ -144,32 +146,36 @@ void unpack(char* zipname, char* dir) {
  sprintf(param1, "\"%s\"", strong_zipname); 
  
  // Распаковать в текущюю папку (флаг 'x'), а потом поместить в нужное место 
- _spawnl(_P_WAIT, "C:\\Program Files\\7-Zip\\7z.exe","7z.exe","x",param1,NULL); 
-  //Переместитьь в нужный каталог 
-  char old_file_name[1000]; 
+ _spawnl(_P_WAIT, "C:\\Program Files\\7-Zip\\7z.exe","7z.exe","x",param1,NULL);
  
- char new_file_name[1000]; 
+ //Переместитьь в нужный каталог 
+ char old_file_name[1000]; 
+ char new_file_name[1000];
+ 
  if (dir[strlen(dir) - 1] != '\\') 
-  strcat(dir, "\\"); 
+  strcat(dir, "\\");
+
  strcpy(old_file_name, cur_dir); 
  strcat(old_file_name, strrchr(strong_zipname, '\\') + 1); 
  strcpy(strrchr(old_file_name, '.'),".txt"); 
-strcpy(new_file_name, dir); 
-strcat(new_file_name, strrchr(strong_zipname, '\\') + 1); 
-strcpy(strrchr(new_file_name, '.'), ".txt"); 
-if (rename(old_file_name, new_file_name)) 
-    error_message((char*) "Cann't put file to destination folder"); 
+ strcpy(new_file_name, dir); 
+ strcat(new_file_name, strrchr(strong_zipname, '\\') + 1); 
+ strcpy(strrchr(new_file_name, '.'), ".txt"); 
+ if (rename(old_file_name, new_file_name)) 
+     error_message((char*) "Cann't put file to destination folder"); 
  
-// Расшифровать 
-uncrypt(new_file_name); 
-printf("Done"); 
-_getch(); 
-} 
+ // Расшифровать 
+ uncrypt(new_file_name); 
+ printf("Done"); 
+ _getch(); 
+}
+
+// Зашифровать 
 void crypt(char* filename) { 
     FILE* in = fopen(filename, "r"); 
     FILE* out = fopen(filename, "r+"); 
     if (in == NULL || out == NULL) 
-        error_message((char*) "File doesn't exist"); 
+        error_message("File doesn't exist"); 
     char cur; 
     while (fread((void*)&cur, sizeof(char), 1, in) != 0) { 
         if (cur == 0) 
@@ -180,12 +186,14 @@ void crypt(char* filename) {
     } 
     fclose(in); 
     fclose(out); 
-} 
+}
+
+// Расшифровать 
 void uncrypt(char* filename) { 
     FILE* in = fopen(filename, "r"); 
     FILE* out = fopen(filename, "r+"); 
     if (in == NULL || out == NULL) 
-        error_message((char*) "File doesn't exist"); 
+        error_message("File doesn't exist"); 
     char cur; 
     while (fread((void*)&cur, sizeof(char), 1, in) != 0) { 
         if (cur == 255) 
