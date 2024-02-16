@@ -18,7 +18,14 @@ void uncrypt(char* filename);
 void main(int argc, char* argv[]) { 
  char filename[100]; 
  char zipname[100]; 
- char dir[100]; 
+ char dir[100];
+
+
+ /*int result = _spawnl(_P_WAIT, "C:\\Program Files\\7-Zip\\7z.exe", "7z.exe", "a", "C:\\Users\\mrfir\\Documents\\C++\\Operating_Systems_LR1\\d.zip", "C:\\Users\\mrfir\\Documents\\C++\\Operating_Systems_LR1\\d.txt", NULL);
+ printf("%d\n", result);
+ 
+ int result = _spawnl(_P_WAIT, "C:\\Program Files\\7Zip\\7z.exe","7z.exe","a", "C:\\Users\\mrfir\\Documents\\C++\\Operating_Systems_LR1\\d.zip","C:\\Users\\mrfir\\Documents\\C++\\Operating_Systems_LR1\\d.txt", NULL);
+ printf("%d\n", result);*/
  
  // Анализируем параметры командной строки 
  // Первый параметр - всегда название ссамого запакуемого процесса 
@@ -118,7 +125,7 @@ void pack(char* filename) {
  crypt(strong_filename);
  
  // Запаковать 
- _spawnl(_P_WAIT, "C:\\Program Files\\7Zip\\7z.exe","7z.exe","a", archive_name, file, NULL);
+ _spawnl(_P_WAIT, "C:\\Program Files\\7-Zip\\7z.exe","7z.exe","a", archive_name, file, NULL);
  
  // Вернуть файл в исходное состояние 
  uncrypt(strong_filename); 
@@ -156,7 +163,7 @@ void unpack(const char* zipname, char* dir) {
   strcat(dir, "\\");
 
  strcpy(old_file_name, cur_dir); 
- strcat(old_file_name, strrchr(strong_zipname, '\\') + 1); 
+ strcat(old_file_name, strrchr(strong_zipname, '\\')); 
  strcpy(strrchr(old_file_name, '.'),".txt"); 
  strcpy(new_file_name, dir); 
  strcat(new_file_name, strrchr(strong_zipname, '\\') + 1); 
